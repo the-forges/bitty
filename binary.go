@@ -2,7 +2,6 @@ package main
 
 import (
 	"math"
-	"strings"
 )
 
 var iecUnitExponentMap = map[UnitSymbol]int{
@@ -99,6 +98,24 @@ func IECSymbolByteSize(symbol UnitSymbol, size float64) float64 {
 	}
 }
 
+func sizeInIECUnit(symbol UnitSymbol, bytes float64) float64 {
+	uexp, ok := iecUnitExponentMap[symbol]
+	if !ok {
+		return float64(0)
+	}
+	exp := float64(uexp * 10)
+	switch symbol {
+	case Bit:
+		return float64(bytes * 8)
+	case Kib, Mib, Gib, Tib, Pib, Eib, Zib, Yib:
+		return (bytes / (bytes * 0.125)) / 2
+	case Byte, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB:
+		return bytes / math.Pow(2, float64(exp))
+	default:
+		return float64(0)
+	}
+}
+
 // ByteSize returns the size of the Unit measured in bytes
 func (u *IECUnit) ByteSize() float64 {
 	return IECSymbolByteSize(u.symbol, u.size)
@@ -124,40 +141,51 @@ func (u *IECUnit) SizeInUnit(symbol UnitSymbol) float64 {
 	return float64(0)
 }
 
-func findNearestUnitSymbol(sym UnitSymbol, exp int) UnitSymbol {
-	syms := iecExponentUnitMap[exp]
-	if strings.HasPrefix(string(sym), "ib") {
-		return syms[0]
+func findNearestIECUnitSymbols(exp int) []UnitSymbol {
+	return iecExponentUnitMap[exp]
+}
+
+func findLargestIECUnitSymbol(left, right UnitSymbol, exp int) UnitSymbol {
+	if left == right {
+		return left
 	}
-	return syms[1]
+	syms := findNearestIECUnitSymbols(exp)
+	if syms[1] == left {
+		return left
+	}
+	return right
 }
 
 // Add attempts to add one Unit to another
-func (u *IECUnit) Add(unit Unit) (Unit, error) {
+func (u *IECUnit) Add(unit Unit) Unit {
+	var (
+		ru *IECUnit
+		ok bool
+	)
+	if ru, ok = unit.(*IECUnit); !ok {
+		return u
+	}
 	left := u.ByteSize()
-	right := unit.ByteSize()
+	right := ru.ByteSize()
 	total := left + right
 	nexp := int(math.Round(math.Log2(total) / 10))
-	nsym := findNearestUnitSymbol(u.symbol, nexp)
-	size := (left / total) * u.size
-	nu, err := NewIECUnit(size, nsym)
-	if err != nil {
-		return nil, err
-	}
-	return nu, nil
+	nsym := findLargestIECUnitSymbol(u.symbol, ru.symbol, nexp)
+	size := sizeInIECUnit(nsym, total)
+	nu, _ := NewIECUnit(size, nsym)
+	return nu
 }
 
 // Subtract attempts to subtract one Unit from another
-func (u *IECUnit) Subtract(units Unit) (Unit, error) {
-	return nil, nil
+func (u *IECUnit) Subtract(units Unit) Unit {
+	return nil
 }
 
 // Multiply attempts to multiply one Unit by another
-func (u *IECUnit) Multiply(unit Unit) (Unit, error) {
-	return nil, nil
+func (u *IECUnit) Multiply(unit Unit) Unit {
+	return nil
 }
 
 // Divide attempts to divide one Unit by another
-func (u *IECUnit) Divide(unit Unit) (Unit, error) {
-	return nil, nil
+func (u *IECUnit) Divide(unit Unit) Unit {
+	return nil
 }

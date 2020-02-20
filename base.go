@@ -107,11 +107,11 @@ type Sizer interface {
 // All returns are diminshing or increasing UnitSymbol measurements as defined by the SI and IEC
 type Calculator interface {
 	// Add attempts to add one Unit to another
-	Add(Unit) (Unit, error)
+	Add(Unit) Unit
 	// Subtract attempts to subtract one Unit from another
-	Subtract(Unit) (Unit, error)
+	Subtract(Unit) Unit
 	// Multiply attempts to multiply one Unit by another
-	Multiply(Unit) (Unit, error)
+	Multiply(Unit) Unit
 	// Divide attempts to divide one Unit from another
-	Divide(Unit) (Unit, error)
+	Divide(Unit) Unit
 }
