@@ -146,14 +146,24 @@ func findNearestIECUnitSymbols(exp int) []UnitSymbol {
 }
 
 func findLargestIECUnitSymbol(left, right UnitSymbol, exp int) UnitSymbol {
-	if left == right {
-		return left
-	}
 	syms := findNearestIECUnitSymbols(exp)
-	if syms[1] == left {
-		return left
+	var li, ri int
+	for i, v := range syms {
+		n := i + 1
+		if left == v {
+			li = n
+		}
+		if right == v {
+			ri = n
+		}
 	}
-	return right
+	if li == 0 && ri == 0 {
+		return syms[0]
+	} else if li > ri {
+		return syms[li-1]
+	} else {
+		return syms[ri-1]
+	}
 }
 
 // Add attempts to add one Unit to another
@@ -176,8 +186,32 @@ func (u *IECUnit) Add(unit Unit) Unit {
 }
 
 // Subtract attempts to subtract one Unit from another
-func (u *IECUnit) Subtract(units Unit) Unit {
-	return nil
+func (u *IECUnit) Subtract(unit Unit) Unit {
+	var (
+		ru    *IECUnit
+		ok    bool
+		total float64
+		nexp  int
+	)
+	if ru, ok = unit.(*IECUnit); !ok {
+		return u
+	}
+	left := u.ByteSize()
+	right := ru.ByteSize()
+	if left > right {
+		total = left - right
+	} else {
+		total = right - left
+	}
+	if total > 0 {
+		nexp = int(math.Round(math.Log2(total) / 10))
+	} else {
+		nexp = 0
+	}
+	nsym := findLargestIECUnitSymbol(u.symbol, ru.symbol, nexp)
+	size := sizeInIECUnit(nsym, total)
+	nu, _ := NewIECUnit(size, nsym)
+	return nu
 }
 
 // Multiply attempts to multiply one Unit by another

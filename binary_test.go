@@ -321,3 +321,50 @@ func TestIECUnit_Add(t *testing.T) {
 		assert.Equal(t, tst.expected, u)
 	}
 }
+
+func ExampleIECUnit_Subtract() {
+	var (
+		c, f, i *IECUnit
+		ok      bool
+	)
+	// Test the same byte symbol
+	a, _ := NewIECUnit(2, MiB)
+	b, _ := NewIECUnit(2, MiB)
+	if c, ok = a.Subtract(b).(*IECUnit); !ok {
+		panic(fmt.Errorf("Unit not *IECUnit: %v", c))
+	}
+	fmt.Printf(
+		"%.f %s - %.f %s = %.f %s\n",
+		a.size, a.symbol,
+		b.size, b.symbol,
+		c.size, c.symbol,
+	)
+	// Test the same bit symbol
+	d, _ := NewIECUnit(2, Mib)
+	e, _ := NewIECUnit(2, Mib)
+	if f, ok = d.Subtract(e).(*IECUnit); !ok {
+		panic(fmt.Errorf("Unit not *IECUnit: %v", f))
+	}
+	fmt.Printf(
+		"%.f %s - %.f %s = %.f %s\n",
+		d.size, d.symbol,
+		e.size, e.symbol,
+		f.size, f.symbol,
+	)
+	// Test mixed bit/byte symbol
+	g, _ := NewIECUnit(2, Mib)
+	h, _ := NewIECUnit(2, MiB)
+	if i, ok = g.Subtract(h).(*IECUnit); !ok {
+		panic(fmt.Errorf("Unit not *IECUnit: %v", i))
+	}
+	fmt.Printf(
+		"%.f %s - %.f %s = %.2f %s\n",
+		g.size, g.symbol,
+		h.size, h.symbol,
+		i.size, i.symbol,
+	)
+	// Output:
+	// 2 MiB - 2 MiB = 0 Bit
+	// 2 Mib - 2 Mib = 0 Bit
+	// 2 Mib - 2 MiB = 1.75 MiB
+}
