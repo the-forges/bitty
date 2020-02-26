@@ -1,23 +1,38 @@
 package main
 
-// Unit enables Unit kinds to interact with each other
-type Unit interface {
-	Sizer
-	Calculator
+// Symbolic enables Unit to provide a standard, exponent, and symbol
+type Symbolic interface {
+	// Standard returns the standard for the unit as defined by the SI brochure,
+	// 9th Edition, page 145:
+	// 	https://www.bipm.org/utils/common/pdf/si-brochure/SI-Brochure-9.pdf
+	Standard() UnitStandard
+	// Exponent returns the supported exponent as an int
+	// To calculate the value from the standard, symbol, and size the formulas
+	// are:
+	// 	- Given the Standard is SI, value as v is equal to (10^e)size
+	// 	- Given the Standard is IEC, value as v is equal to (2^(e*10))size
+	Exponent() int
+	// Symbol returns the supported symbol as a UnitSymbol
+	Symbol() UnitSymbol
 }
 
-// Sizer enables Unit to get a size measured by bit, byte, or arbitrary data Unit kind
+// Sizer enables Unit to get a size measured by bit, byte, or arbitrary data
+// Unit kind
 type Sizer interface {
+	// Size returns the size of the Unit
+	Size() float64
 	// BitSize returns the size of the Unit measured in bits
 	BitSize() float64
 	// ByteSize returns the size of the Unit measured in bytes
 	ByteSize() float64
-	// SizeInUnit returns the size of the Unit measured in an arbitrary UnitSymbol from Bit up to YiB or YB
+	// SizeInUnit returns the size of the Unit measured in an arbitrary
+	// UnitSymbol from Bit up to YiB or YB
 	SizeInUnit(UnitSymbol) float64
 }
 
 // Calculator enables Units to be calculated against each other
-// All returns are diminshing or increasing UnitSymbol measurements as defined by the SI and IEC
+// All returns are diminshing or increasing UnitSymbol measurements as defined
+// by the SI and IEC
 type Calculator interface {
 	// Add attempts to add one Unit to another
 	Add(Unit) Unit
@@ -27,6 +42,13 @@ type Calculator interface {
 	Multiply(Unit) Unit
 	// Divide attempts to divide one Unit from another
 	Divide(Unit) Unit
+}
+
+// Unit enables Unit kinds to interact with each other
+type Unit interface {
+	Symbolic
+	Sizer
+	Calculator
 }
 
 // BaseSymbolPair represents the bit and byte pairs necassary for
@@ -43,7 +65,7 @@ func (b *BaseUnitSymbolPair) Standard() UnitStandard {
 	}
 	return *b.standard
 }
-func (b *BaseUnitSymbolPair) Exponent() uint {
+func (b *BaseUnitSymbolPair) Exponent() int {
 	return 0
 }
 func (b *BaseUnitSymbolPair) Least() UnitSymbol {

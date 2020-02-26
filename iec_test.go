@@ -225,93 +225,8 @@ func TestIECUnit_SizeInUnit(t *testing.T) {
 
 func Test_findNearestIECUnitSymbols(t *testing.T) {
 	for i, v := range iecExponentUnitMap {
-		u := findNearestIECUnitSymbols(uint(i))
+		u := findNearestIECUnitSymbols(i)
 		assert.Equal(t, v, u)
-	}
-}
-
-func Test_findGCDIECUnitSymbol_knownExponents(t *testing.T) {
-	var (
-		res UnitSymbol
-		err error
-	)
-	for i, outerSyms := range iecExponentUnitMap {
-		outerL, outerR := outerSyms[0], outerSyms[1]
-		// Test that the right is always greater than the left for an equal exponent
-		res, err = findGCDIECUnitSymbol(outerL, outerR, nil)
-		assert.NoError(t, err)
-		assert.Equal(t, outerR, res)
-		res, err = findGCDIECUnitSymbol(outerR, outerL, nil)
-		assert.NoError(t, err)
-		assert.Equal(t, outerR, res)
-		// Test for bad unit symbol
-		res, err = findGCDIECUnitSymbol(UnitSymbol("BADFOO"), outerR, nil)
-		assert.NoError(t, err)
-		assert.Equal(t, outerR, res)
-		res, err = findGCDIECUnitSymbol(outerR, UnitSymbol("BADFOO"), nil)
-		assert.NoError(t, err)
-		assert.Equal(t, outerR, res)
-		res, err = findGCDIECUnitSymbol(UnitSymbol("BADFOO"), outerL, nil)
-		assert.NoError(t, err)
-		assert.Equal(t, outerR, res)
-		res, err = findGCDIECUnitSymbol(outerL, UnitSymbol("BADFOO"), nil)
-		assert.NoError(t, err)
-		assert.Equal(t, outerR, res)
-		// Test for all known combinations of iec unit symbols
-		for j, innerSyms := range iecExponentUnitMap {
-			// Test that the greater exponent in a mixed set always wins
-			innerL, innerR := innerSyms[0], innerSyms[1]
-			if i > j {
-				res, err := findGCDIECUnitSymbol(outerL, innerL, nil)
-				assert.NoError(t, err)
-				assert.Equal(t, innerR, res)
-				res, err = findGCDIECUnitSymbol(outerR, innerR, nil)
-				assert.NoError(t, err)
-				assert.Equal(t, innerR, res)
-			} else {
-				res, err := findGCDIECUnitSymbol(outerL, innerL, nil)
-				assert.NoError(t, err)
-				assert.Equal(t, outerR, res)
-				res, err = findGCDIECUnitSymbol(outerR, innerR, nil)
-				assert.NoError(t, err)
-				assert.Equal(t, outerR, res)
-			}
-
-		}
-	}
-}
-
-func Test_findGCDIECUnitSymbol_calculatedExponents(t *testing.T) {
-	exp := 0
-	for i, outerSyms := range iecExponentUnitMap {
-		outerL, outerR := outerSyms[0], outerSyms[1]
-		for j, innerSyms := range iecExponentUnitMap {
-			innerL, innerR := innerSyms[0], innerSyms[1]
-			var expected UnitSymbol
-			if i >= exp && j >= exp {
-				syms := iecExponentUnitMap[exp]
-				expected = syms[1]
-			} else if i < exp && j >= exp {
-				expected = outerR
-			} else if i >= exp && j < exp {
-				expected = innerR
-			} else {
-				if i < j {
-					expected = outerR
-				} else {
-					expected = innerR
-				}
-			}
-			nexp := uint(exp)
-
-			res, err := findGCDIECUnitSymbol(outerL, innerL, &nexp)
-			assert.NoErrorf(t, err, "i: %d, j: %d, nexp: %d", i, j, nexp)
-			assert.Equal(t, expected, res)
-
-			res, err = findGCDIECUnitSymbol(outerR, innerR, &nexp)
-			assert.NoErrorf(t, err, "i: %d, j: %d, nexp: %d", i, j, nexp)
-			assert.Equal(t, expected, res)
-		}
 	}
 }
 
@@ -325,9 +240,9 @@ func ExampleIECUnit_Add() {
 	}
 	fmt.Printf(
 		"%.f %s + %.f %s = %.f %s\n",
-		a.size, a.symbol,
-		b.size, b.symbol,
-		c.size, c.symbol,
+		a.Size(), a.Symbol(),
+		b.Size(), b.Symbol(),
+		c.Size(), c.Symbol(),
 	)
 	// Test the same bit symbol
 	d, _ := NewIECUnit(2, Mib)
@@ -338,9 +253,9 @@ func ExampleIECUnit_Add() {
 	}
 	fmt.Printf(
 		"%.f %s + %.f %s = %.f %s\n",
-		d.size, d.symbol,
-		e.size, e.symbol,
-		f.size, f.symbol,
+		d.Size(), d.Symbol(),
+		e.Size(), e.Symbol(),
+		f.Size(), f.Symbol(),
 	)
 	// Test mixed bit/byte symbol
 	g, _ := NewIECUnit(2, Mib)
@@ -351,9 +266,9 @@ func ExampleIECUnit_Add() {
 	}
 	fmt.Printf(
 		"%.f %s + %.f %s = %.2f %s\n",
-		g.size, g.symbol,
-		h.size, h.symbol,
-		i.size, i.symbol,
+		g.Size(), g.Symbol(),
+		h.Size(), h.Symbol(),
+		i.Size(), i.Symbol(),
 	)
 	// Test mixed byte/bit symbol
 	j, _ := NewIECUnit(2, MiB)
@@ -364,9 +279,9 @@ func ExampleIECUnit_Add() {
 	}
 	fmt.Printf(
 		"%.f %s + %.f %s = %.2f %s\n",
-		j.size, j.symbol,
-		k.size, k.symbol,
-		l.size, l.symbol,
+		j.Size(), j.Symbol(),
+		k.Size(), k.Symbol(),
+		l.Size(), l.Symbol(),
 	)
 	// Output:
 	// 2 MiB + 2 MiB = 4 MiB
@@ -390,34 +305,43 @@ func TestIECUnit_Add(t *testing.T) {
 		}
 		for l := range iecUnitExponentMap {
 			var (
+				ru   *IECUnit
+				exp  int
 				nsym UnitSymbol
-				err  error
-				exp  *uint
+				size float64
 			)
-			tur, _ := NewIECUnit(rand.Float64()*10, l)
-			u := testIECUnitAdd{left: tul, right: tur}
+			ru, _ = NewIECUnit(rand.Float64()*10, l)
+			u := testIECUnitAdd{left: tul, right: ru}
 			left := tul.ByteSize()
-			right := tur.ByteSize()
+			right := ru.ByteSize()
 			total := left + right
-			nexp := uint(math.Round(math.Log2(total) / 10))
-			if nexp > tul.exponent && nexp > tur.exponent {
-				e := uint(nexp)
-				exp = &e
-			}
-			if tul.symbol != tur.symbol {
-				nsym, err = findGCDIECUnitSymbol(tul.symbol, tur.symbol, exp)
-				assert.NoError(t, err)
+			nexp := int(math.Round(math.Log2(total) / 10))
+			if nexp > tul.Exponent() && nexp > ru.Exponent() {
+				exp = nexp
 			} else {
-				nsym = tul.symbol
+				if tul.exponent >= ru.exponent {
+					exp = tul.Exponent()
+				} else {
+					exp = ru.Exponent()
+				}
 			}
-			size := sizeInIECUnit(nsym, total)
+			nsym, _ = FindGreatestUnitSymbol(IEC, exp)
+			lsym, _ := FindLeastUnitSymbol(IEC, exp)
+			size = BytesToUnitSymbolSize(IEC, nsym, total)
+			lsize := BytesToUnitSymbolSize(IEC, lsym, total)
+			if size < 1 {
+				nsym = lsym
+				size = lsize
+			}
 			u.expected, _ = NewIECUnit(size, nsym)
 			tests = append(tests, u)
 		}
 	}
 	// Add a couple of bad entries for negative testing
-	gu, _ := NewIECUnit(rand.Float64()*10, MiB)
-	bu := &IECUnit{rand.Float64() * 10, UnitSymbol("FooBar"), 30}
+	s := rand.Float64() * 10
+	gu, _ := NewIECUnit(s, MiB)
+	byteu, _ := NewIECUnit(s, Byte)
+	bu := &IECUnit{s, UnitSymbol("FooBar"), 30}
 	bul := testIECUnitAdd{
 		left:     bu,
 		right:    gu,
@@ -428,7 +352,12 @@ func TestIECUnit_Add(t *testing.T) {
 		right:    bu,
 		expected: gu,
 	}
-	tests = append(tests, bul, bur)
+	bub := testIECUnitAdd{
+		left:     bu,
+		right:    bu,
+		expected: byteu,
+	}
+	tests = append(tests, bul, bur, bub)
 	// Run through all the tests
 	for _, tst := range tests {
 		u, ok := tst.left.Add(tst.right).(*IECUnit)

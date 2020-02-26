@@ -56,7 +56,7 @@ const (
 // and exponent
 type UnitSymbolPair interface {
 	Standard() UnitStandard
-	Exponent() uint
+	Exponent() int
 	Least() UnitSymbol
 	Greatest() UnitSymbol
 }

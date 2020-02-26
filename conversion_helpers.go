@@ -20,7 +20,7 @@ func FindUnitSymbolPairBySymbol(std UnitStandard, sym UnitSymbol) (UnitSymbolPai
 // FindUnitSymbolPairByExponent takes a UnitStandard and an exponent in order to
 // find and return the UnitSymbolPair for that standard and exponent, or false
 // if the UnitSymbolPair cannot be found.
-func FindUnitSymbolPairByExponent(std UnitStandard, exp uint) (UnitSymbolPair, bool) {
+func FindUnitSymbolPairByExponent(std UnitStandard, exp int) (UnitSymbolPair, bool) {
 	var stdMatch, expMatch bool
 	for _, p := range unitSymbolPairs {
 		stdMatch = p.Standard() == std
@@ -34,25 +34,36 @@ func FindUnitSymbolPairByExponent(std UnitStandard, exp uint) (UnitSymbolPair, b
 
 // FindGreatestUnitSymbol finds the greatest of two unit symbols for a given
 // exponent by standard
-func FindGreatestUnitSymbol(std UnitStandard, exp uint) (UnitSymbol, bool) {
+func FindGreatestUnitSymbol(std UnitStandard, exp int) (UnitSymbol, bool) {
+	var sym UnitSymbol
 	pair, ok := FindUnitSymbolPairByExponent(std, exp)
-	return pair.Greatest(), ok
+	if !ok {
+		return sym, false
+	}
+	return pair.Greatest(), true
 }
 
 // FindLeastUnitSymbol finds the least of two unit symbols for a given
 // exponent by standard
-func FindLeastUnitSymbol(std UnitStandard, exp uint) (UnitSymbol, bool) {
+func FindLeastUnitSymbol(std UnitStandard, exp int) (UnitSymbol, bool) {
 	pair, ok := FindUnitSymbolPairByExponent(std, exp)
 	return pair.Least(), ok
 }
 
-func UnitSymbolByteSize(std UnitStandard, sym UnitSymbol, size float64) float64 {
+// UnitSymbolToByteSize converts the size from one unit into bytes
+func UnitSymbolToByteSize(std UnitStandard, sym UnitSymbol, size float64) float64 {
+	var exp, bytes float64
 	pair, ok := FindUnitSymbolPairBySymbol(std, sym)
 	if !ok {
 		return float64(0)
 	}
-	exp := float64(pair.Exponent() * 10)
-	bytes := float64(math.Exp2(exp) * size)
+	if std == IEC {
+		exp = float64(pair.Exponent() * 10)
+		bytes = float64(math.Exp2(exp) * size)
+	} else {
+		exp = float64(pair.Exponent())
+		bytes = float64(math.Pow10(int(exp)) * size)
+	}
 	switch sym {
 	case Bit:
 		return float64(size * 8)
@@ -62,6 +73,30 @@ func UnitSymbolByteSize(std UnitStandard, sym UnitSymbol, size float64) float64 
 		return float64(bytes * 0.125)
 	case KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB:
 		return float64(bytes)
+	default:
+		return float64(0)
+	}
+}
+
+// BytesToUnitSymbolSize ...
+func BytesToUnitSymbolSize(std UnitStandard, sym UnitSymbol, size float64) float64 {
+	var exp float64
+	pair, ok := FindUnitSymbolPairBySymbol(std, sym)
+	if !ok {
+		return float64(0)
+	}
+	if std == IEC {
+		exp = float64(pair.Exponent() * 10)
+	} else {
+		exp = float64(pair.Exponent())
+	}
+	switch sym {
+	case Bit:
+		return float64(size * 8)
+	case Kib, Mib, Gib, Tib, Pib, Eib, Zib, Yib:
+		return (size / (size * 0.125)) / 2
+	case Byte, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB:
+		return size / math.Pow(2, float64(exp))
 	default:
 		return float64(0)
 	}

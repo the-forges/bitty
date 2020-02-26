@@ -6,10 +6,10 @@ import "math"
 // edition SI standard
 type SIUnitSymbolPair struct {
 	least, greatest UnitSymbol
-	exponent        uint
+	exponent        int
 }
 
-func NewSIUnitSymbolPair(l, r UnitSymbol, e uint) UnitSymbolPair {
+func NewSIUnitSymbolPair(l, r UnitSymbol, e int) UnitSymbolPair {
 	return &SIUnitSymbolPair{least: l, greatest: r, exponent: e}
 }
 
@@ -17,7 +17,7 @@ func (pair *SIUnitSymbolPair) Standard() UnitStandard {
 	return SI
 }
 
-func (pair *SIUnitSymbolPair) Exponent() uint {
+func (pair *SIUnitSymbolPair) Exponent() int {
 	return pair.exponent
 }
 
