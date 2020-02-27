@@ -1,4 +1,4 @@
-package main
+package bitty
 
 /*
 	Copyright 2020 IBM
