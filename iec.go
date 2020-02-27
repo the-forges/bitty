@@ -100,7 +100,7 @@ func (u *IECUnit) Size() float64 {
 
 // BitSize returns the size of the Unit measured in bits
 func (u *IECUnit) BitSize() float64 {
-	switch u.symbol {
+	switch u.Symbol() {
 	case Bit:
 		return float64(u.ByteSize() / 8)
 	case Byte,
@@ -114,24 +114,24 @@ func (u *IECUnit) BitSize() float64 {
 
 // ByteSize returns the size of the Unit measured in bytes
 func (u *IECUnit) ByteSize() float64 {
-	return UnitSymbolToByteSize(IEC, u.symbol, u.size)
+	return UnitSymbolToByteSize(IEC, u.Symbol(), u.Size())
 }
 
 // SizeInUnit returns the size of the Unit measured in an arbitrary UnitSymbol from Bit up to YiB or YB
 func (u *IECUnit) SizeInUnit(symbol UnitSymbol) float64 {
-	_, uok := FindUnitSymbolPairBySymbol(IEC, u.symbol)
+	_, uok := FindUnitSymbolPairBySymbol(IEC, u.Symbol())
 	p, ok := FindUnitSymbolPairBySymbol(IEC, symbol)
 	if uok && ok {
 		var (
 			left    = u.ByteSize()
-			right   = UnitSymbolToByteSize(IEC, symbol, u.size)
-			diffExp = float64(u.exponent) - float64(p.Exponent())
+			right   = UnitSymbolToByteSize(IEC, symbol, u.Size())
+			diffExp = float64(u.Exponent()) - float64(p.Exponent())
 		)
 		if diffExp > 0 {
 			return right * diffExp
 		}
 		if left > 0.0 && right > 0.0 {
-			return float64((left / right) * u.size)
+			return float64((left / right) * u.Size())
 		}
 	}
 	return float64(0)
@@ -213,7 +213,7 @@ func (u *IECUnit) Subtract(unit Unit) Unit {
 	} else {
 		nexp = 0
 	}
-	if u.symbol != ru.symbol || nexp != u.exponent {
+	if u.Symbol() != ru.Symbol() || nexp != u.Exponent() {
 		lsym, ok = FindLeastUnitSymbol(IEC, nexp)
 		if !ok {
 			return u
@@ -223,7 +223,7 @@ func (u *IECUnit) Subtract(unit Unit) Unit {
 			return u
 		}
 	} else {
-		lsym, gsym = u.symbol, u.symbol
+		lsym, gsym = u.Symbol(), u.Symbol()
 	}
 	smlSize := BytesToUnitSymbolSize(IEC, lsym, total)
 	lrgSize := BytesToUnitSymbolSize(IEC, gsym, total)
