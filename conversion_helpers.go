@@ -16,7 +16,22 @@ package bitty
 	limitations under the License.
 */
 
-import "math"
+import (
+	"fmt"
+	"math"
+	"regexp"
+	"strconv"
+)
+
+// NewUnit takes a UnitStandard, float64, and UnitSymbol, returning a valid Unit
+func NewUnit(std UnitStandard, size float64, sym UnitSymbol) (Unit, error) {
+	switch std {
+	case IEC:
+		return NewIECUnit(size, sym)
+	default:
+		return nil, fmt.Errorf("%s is currently not a supported standard", string(std))
+	}
+}
 
 // FindUnitSymbolPairBySymbol takes a UnitStandard and a symbol in order to
 // find and return the UnitSymbolPair for that standard and symbol, or false
@@ -46,6 +61,30 @@ func FindUnitSymbolPairByExponent(std UnitStandard, exp int) (UnitSymbolPair, bo
 		}
 	}
 	return nil, false
+}
+
+// FindStandardBySymbol takes a unit symbol, searches for a symbol pair that
+// matches, and returns the standard for that pair
+func FindStandardBySymbol(sym UnitSymbol) (UnitStandard, bool) {
+	for _, p := range unitSymbolPairs {
+		if p.Least() == sym || p.Greatest() == sym {
+			return p.Standard(), true
+		}
+	}
+	return UnitStandard(0), false
+}
+
+// FindExponentBySymbol takes a symbol and returns the exponent
+func FindExponentBySymbol(sym UnitSymbol) (int, bool) {
+	s, ok := FindStandardBySymbol(sym)
+	if !ok {
+		return 0, false
+	}
+	pair, ok := FindUnitSymbolPairBySymbol(s, sym)
+	if !ok {
+		return 0, false
+	}
+	return pair.Exponent(), true
 }
 
 // FindGreatestUnitSymbol finds the greatest of two unit symbols for a given
@@ -94,7 +133,7 @@ func UnitSymbolToByteSize(std UnitStandard, sym UnitSymbol, size float64) float6
 	}
 }
 
-// BytesToUnitSymbolSize ...
+// BytesToUnitSymbolSize converts bytes to the best unit size as a float64
 func BytesToUnitSymbolSize(std UnitStandard, sym UnitSymbol, size float64) float64 {
 	var exp float64
 	pair, ok := FindUnitSymbolPairBySymbol(std, sym)
@@ -116,4 +155,27 @@ func BytesToUnitSymbolSize(std UnitStandard, sym UnitSymbol, size float64) float
 	default:
 		return float64(0)
 	}
+}
+
+// Parse parses a string representation of a unit size in the format of
+// "<size><unit symbol>" or "<size> <unit symbol>" in order to instantiate and
+// return a Unit with the correct standard, exponent, size, and symbol
+func Parse(s string) (Unit, error) {
+	stderr := fmt.Errorf("%s could not be found in the standard", s)
+	parseerr := fmt.Errorf("%s could not be parsed", s)
+	r := regexp.MustCompile(`^(\d+)\s{0,}(\w+)$`)
+	if r.MatchString(s) {
+		m := r.FindStringSubmatch(s)
+		size, err := strconv.Atoi(m[1])
+		if err != nil {
+			return nil, parseerr
+		}
+		symbol := UnitSymbol(m[2])
+		standard, ok := FindStandardBySymbol(symbol)
+		if !ok {
+			return nil, stderr
+		}
+		return NewUnit(standard, float64(size), symbol)
+	}
+	return nil, parseerr
 }
