@@ -1,4 +1,4 @@
-module github.ibm.com/ironmag/bitty
+module github.com/m3talsmith/bitty
 
 go 1.13
 
