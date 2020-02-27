@@ -23,7 +23,9 @@ const (
 	EiB  UnitSymbol = "EiB"
 	ZiB  UnitSymbol = "ZiB"
 	YiB  UnitSymbol = "YiB"
-	Kb   UnitSymbol = "Kb"
+	db   UnitSymbol = "db"
+	hb   UnitSymbol = "hb"
+	kb   UnitSymbol = "kb"
 	Mb   UnitSymbol = "Mb"
 	Gb   UnitSymbol = "Gb"
 	Tb   UnitSymbol = "Tb"
@@ -31,7 +33,9 @@ const (
 	Eb   UnitSymbol = "Eb"
 	Zb   UnitSymbol = "Zb"
 	Yb   UnitSymbol = "Yb"
-	KB   UnitSymbol = "KB"
+	dB   UnitSymbol = "dB"
+	hB   UnitSymbol = "hB"
+	kB   UnitSymbol = "kB"
 	MB   UnitSymbol = "MB"
 	GB   UnitSymbol = "GB"
 	TB   UnitSymbol = "TB"
@@ -72,12 +76,14 @@ var unitSymbolPairs = []UnitSymbolPair{
 	NewIECUnitSymbolPair(Eib, EiB, 6),
 	NewIECUnitSymbolPair(Zib, ZiB, 7),
 	NewIECUnitSymbolPair(Yib, YiB, 8),
-	NewSIUnitSymbolPair(Kb, KB, 1),
-	NewSIUnitSymbolPair(Mb, MB, 2),
-	NewSIUnitSymbolPair(Gb, GB, 3),
-	NewSIUnitSymbolPair(Tb, TB, 4),
-	NewSIUnitSymbolPair(Pb, PB, 5),
-	NewSIUnitSymbolPair(Eb, EB, 6),
-	NewSIUnitSymbolPair(Zb, ZB, 7),
-	NewSIUnitSymbolPair(Yb, YB, 8),
+	NewSIUnitSymbolPair(db, dB, 1),
+	NewSIUnitSymbolPair(hb, hB, 2),
+	NewSIUnitSymbolPair(kb, kB, 3),
+	NewSIUnitSymbolPair(Mb, MB, 6),
+	NewSIUnitSymbolPair(Gb, GB, 9),
+	NewSIUnitSymbolPair(Tb, TB, 12),
+	NewSIUnitSymbolPair(Pb, PB, 15),
+	NewSIUnitSymbolPair(Eb, EB, 18),
+	NewSIUnitSymbolPair(Zb, ZB, 21),
+	NewSIUnitSymbolPair(Yb, YB, 24),
 }
