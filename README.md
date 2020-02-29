@@ -1,7 +1,7 @@
 Bitty
 =====
 
-[![Build Status](https://travis-ci.org/m3talsmith/bitty.svg?branch=master)](https://travis-ci.org/m3talsmith/bitty)
+[![Build Status](https://travis-ci.org/m3talsmith/bitty.svg?branch=master)](https://travis-ci.org/m3talsmith/bitty) [![Go Report Card](https://goreportcard.com/badge/github.com/m3talsmith/bitty)](https://goreportcard.com/report/github.com/m3talsmith/bitty)
 
 Bitty is a memory unit conversion library that makes working with multiple sizes and SI/IEC standards straight forward. It is based on unit ecapsulation, immutability, plugability, and testability: the idea that each unit should know how to operate with other valid units idempotently; every unit function returns a new unit or value, instead of changing itself; each unit implements interfaces so that it's easy to plug in new unit types (which also makes testing new unit types straight forward).
 
