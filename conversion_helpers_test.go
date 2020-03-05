@@ -51,8 +51,8 @@ func TestNewUnit(t *testing.T) {
 			SI,
 			1,
 			MB,
+			&SIUnit{1, MB, 6},
 			nil,
-			fmt.Errorf("%s is currently not a supported standard", string(SI)),
 		},
 		testNewUnit{
 			UnitStandard(50),

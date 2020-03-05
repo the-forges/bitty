@@ -17,6 +17,7 @@ package bitty
 */
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -39,18 +40,6 @@ var iecUnitExponentMap = map[UnitSymbol]int{
 	ZiB:  7,
 	Yib:  8,
 	YiB:  8,
-}
-
-var iecExponentUnitMap = [][]UnitSymbol{
-	[]UnitSymbol{Bit, Byte},
-	[]UnitSymbol{Kib, KiB},
-	[]UnitSymbol{Mib, MiB},
-	[]UnitSymbol{Gib, GiB},
-	[]UnitSymbol{Tib, TiB},
-	[]UnitSymbol{Pib, PiB},
-	[]UnitSymbol{Eib, EiB},
-	[]UnitSymbol{Zib, ZiB},
-	[]UnitSymbol{Yib, YiB},
 }
 
 // IECUnitSymbolPair represents a binary unit symbol pair as defined by the 9th
@@ -153,53 +142,52 @@ func (u *IECUnit) SizeInUnit(symbol UnitSymbol) float64 {
 	return float64(0)
 }
 
-func findNearestIECUnitSymbols(exp int) []UnitSymbol {
-	return iecExponentUnitMap[exp]
-}
-
 // Add attempts to add one Unit to another
 func (u *IECUnit) Add(unit Unit) Unit {
 	var (
-		ru   *IECUnit
-		exp  int
-		nsym UnitSymbol
-		size float64
+		nexp     int
+		nsym     UnitSymbol
+		size     float64
+		lok, rok bool
 	)
 	// Validate both sides for valid symbols
-	_, upok := FindUnitSymbolPairBySymbol(IEC, u.Symbol())
-	_, rpok := FindUnitSymbolPairBySymbol(IEC, unit.Symbol())
-	if !upok && !rpok {
-		n, _ := NewIECUnit(u.Size(), Byte)
-		return n
+	lok, rok = ValidateSymbols(u.Symbol(), unit.Symbol())
+	if !lok && !rok {
+		nu, _ := NewIECUnit(0, Byte)
+		return nu
 	}
-	if upok && !rpok {
+	if lok && !rok {
 		return u
 	}
-	if !upok && rpok {
+	if rok && !lok {
 		return unit
 	}
-	ru = unit.(*IECUnit)
 	// Lets get adding
 	left := u.ByteSize()
-	right := ru.ByteSize()
+	right := unit.ByteSize()
 	total := left + right
-	nexp := int(math.Round(math.Log2(total) / 10))
-	if nexp > u.Exponent() && nexp > ru.Exponent() {
-		exp = nexp
-	} else {
-		if u.Exponent() >= ru.Exponent() {
-			exp = u.Exponent()
-		} else {
-			exp = ru.Exponent()
-		}
+	if total > 0 {
+		nexp = int(math.Round(math.Log2(total) / 10))
 	}
-	nsym, _ = FindGreatestUnitSymbol(IEC, exp)
-	lsym, _ := FindLeastUnitSymbol(IEC, exp)
-	size = BytesToUnitSymbolSize(IEC, nsym, total)
-	lsize := BytesToUnitSymbolSize(IEC, lsym, total)
-	if size < 1 {
+	if u.Exponent() >= unit.Exponent() {
+		nexp = u.Exponent()
+	} else {
+		nexp = unit.Exponent()
+	}
+	lsym, ok := FindLeastUnitSymbol(IEC, nexp)
+	gsym, ok := FindGreatestUnitSymbol(IEC, nexp)
+	if !ok {
+		nu, _ := NewIECUnit(0, Byte)
+		return nu
+	}
+	smallSize := BytesToUnitSymbolSize(IEC, lsym, total)
+	lrgSize := BytesToUnitSymbolSize(IEC, gsym, total)
+	if lrgSize < 1 {
 		nsym = lsym
-		size = lsize
+		size = smallSize
+	} else {
+		nsym = gsym
+		size = lrgSize
 	}
 	nu, _ := NewIECUnit(size, nsym)
 	return nu
@@ -208,48 +196,55 @@ func (u *IECUnit) Add(unit Unit) Unit {
 // Subtract attempts to subtract one Unit from another
 func (u *IECUnit) Subtract(unit Unit) Unit {
 	var (
-		ru         *IECUnit
-		ok         bool
-		total      float64
-		nexp       int
-		lsym, gsym UnitSymbol
+		ok, lok, rok, neg bool
+		total             float64
+		nexp              int
+		lsym, gsym        UnitSymbol
 	)
-	if ru, ok = unit.(*IECUnit); !ok {
+	lok, rok = ValidateSymbols(u.Symbol(), unit.Symbol())
+	if !lok && !rok {
+		nu, _ := NewIECUnit(0, Byte)
+		return nu
+	}
+	if lok && !rok {
 		return u
 	}
+	if rok && !lok {
+		return unit
+	}
 	left := u.ByteSize()
-	right := ru.ByteSize()
-	if left > right {
+	right := unit.ByteSize()
+	if left >= right {
 		total = left - right
+		fmt.Printf("should be positive: %.2f - %.2f = %.2f\n", left, right, total)
 	} else {
 		total = right - left
+		neg = true
+		fmt.Printf("should be negative: %.2f - %.2f = %.2f\n", right, left, total)
 	}
 	if total > 0 {
 		nexp = int(math.Round(math.Log2(total) / 10))
-	} else {
-		nexp = 0
 	}
-	if u.Symbol() != ru.Symbol() || nexp != u.Exponent() {
-		lsym, ok = FindLeastUnitSymbol(IEC, nexp)
-		if !ok {
-			return u
-		}
-		gsym, ok = FindGreatestUnitSymbol(IEC, nexp)
-		if !ok {
-			return u
-		}
-	} else {
-		lsym, gsym = u.Symbol(), u.Symbol()
+	lsym, ok = FindLeastUnitSymbol(IEC, nexp)
+	gsym, ok = FindGreatestUnitSymbol(IEC, nexp)
+	if !ok {
+		nu, _ := NewIECUnit(0, Byte)
+		return nu
 	}
 	smlSize := BytesToUnitSymbolSize(IEC, lsym, total)
 	lrgSize := BytesToUnitSymbolSize(IEC, gsym, total)
-
-	if lrgSize > 0 {
+	if lrgSize >= 0 {
+		if neg {
+			lrgSize = -lrgSize
+		}
 		nu, err := NewIECUnit(lrgSize, gsym)
 		if err != nil {
 			return u
 		}
 		return nu
+	}
+	if neg {
+		smlSize = -smlSize
 	}
 	nu, err := NewIECUnit(smlSize, lsym)
 	if err != nil {

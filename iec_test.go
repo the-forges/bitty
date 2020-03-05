@@ -239,13 +239,6 @@ func TestIECUnit_SizeInUnit(t *testing.T) {
 	}
 }
 
-func Test_findNearestIECUnitSymbols(t *testing.T) {
-	for i, v := range iecExponentUnitMap {
-		u := findNearestIECUnitSymbols(i)
-		assert.Equal(t, v, u)
-	}
-}
-
 func ExampleIECUnit_Add() {
 	// Test the same byte symbol
 	a, _ := NewIECUnit(2, MiB)
@@ -260,50 +253,8 @@ func ExampleIECUnit_Add() {
 		b.Size(), b.Symbol(),
 		c.Size(), c.Symbol(),
 	)
-	// Test the same bit symbol
-	d, _ := NewIECUnit(2, Mib)
-	e, _ := NewIECUnit(2, Mib)
-	f, ok := d.Add(e).(*IECUnit)
-	if !ok {
-		panic(fmt.Errorf("Unit not *IECUnit: %v", f))
-	}
-	fmt.Printf(
-		"%.f %s + %.f %s = %.f %s\n",
-		d.Size(), d.Symbol(),
-		e.Size(), e.Symbol(),
-		f.Size(), f.Symbol(),
-	)
-	// Test mixed bit/byte symbol
-	g, _ := NewIECUnit(2, Mib)
-	h, _ := NewIECUnit(2, MiB)
-	i, ok := g.Add(h).(*IECUnit)
-	if !ok {
-		panic(fmt.Errorf("Unit not *IECUnit: %v", i))
-	}
-	fmt.Printf(
-		"%.f %s + %.f %s = %.2f %s\n",
-		g.Size(), g.Symbol(),
-		h.Size(), h.Symbol(),
-		i.Size(), i.Symbol(),
-	)
-	// Test mixed byte/bit symbol
-	j, _ := NewIECUnit(2, MiB)
-	k, _ := NewIECUnit(2, Mib)
-	l, ok := j.Add(k).(*IECUnit)
-	if !ok {
-		panic(fmt.Errorf("Unit not *IECUnit: %v", l))
-	}
-	fmt.Printf(
-		"%.f %s + %.f %s = %.2f %s\n",
-		j.Size(), j.Symbol(),
-		k.Size(), k.Symbol(),
-		l.Size(), l.Symbol(),
-	)
 	// Output:
 	// 2 MiB + 2 MiB = 4 MiB
-	// 2 Mib + 2 Mib = 4 Mib
-	// 2 Mib + 2 MiB = 2.25 MiB
-	// 2 MiB + 2 Mib = 2.25 MiB
 }
 
 type testIECUnitAdd struct {
@@ -322,41 +273,56 @@ func TestIECUnit_Add(t *testing.T) {
 		for l := range iecUnitExponentMap {
 			var (
 				ru   *IECUnit
-				exp  int
+				nexp int
 				nsym UnitSymbol
 				size float64
 			)
 			ru, _ = NewIECUnit(rand.Float64()*10, l)
 			u := testIECUnitAdd{left: tul, right: ru}
+			lok, rok := ValidateSymbols(tul.Symbol(), ru.Symbol())
+			if !lok && !rok {
+				nexp = 0
+			}
+			if lok && !rok {
+				nexp = tul.Exponent()
+			}
+			if rok && !lok {
+				nexp = ru.Exponent()
+			}
 			left := tul.ByteSize()
 			right := ru.ByteSize()
 			total := left + right
-			nexp := int(math.Round(math.Log2(total) / 10))
-			if nexp > tul.Exponent() && nexp > ru.Exponent() {
-				exp = nexp
+			if total > 0 {
+				nexp = int(math.Round(math.Log2(total) / 10))
+			}
+			if tul.Exponent() >= ru.Exponent() {
+				nexp = tul.Exponent()
 			} else {
-				if tul.exponent >= ru.exponent {
-					exp = tul.Exponent()
+				nexp = ru.Exponent()
+			}
+			lsym, ok := FindLeastUnitSymbol(IEC, nexp)
+			gsym, ok := FindGreatestUnitSymbol(IEC, nexp)
+			if !ok {
+				u.expected, _ = NewIECUnit(0, Byte)
+			} else {
+				smallSize := BytesToUnitSymbolSize(IEC, lsym, total)
+				lrgSize := BytesToUnitSymbolSize(IEC, gsym, total)
+				if lrgSize < 1 {
+					nsym = lsym
+					size = smallSize
 				} else {
-					exp = ru.Exponent()
+					nsym = gsym
+					size = lrgSize
 				}
+				u.expected, _ = NewIECUnit(size, nsym)
 			}
-			nsym, _ = FindGreatestUnitSymbol(IEC, exp)
-			lsym, _ := FindLeastUnitSymbol(IEC, exp)
-			size = BytesToUnitSymbolSize(IEC, nsym, total)
-			lsize := BytesToUnitSymbolSize(IEC, lsym, total)
-			if size < 1 {
-				nsym = lsym
-				size = lsize
-			}
-			u.expected, _ = NewIECUnit(size, nsym)
 			tests = append(tests, u)
 		}
 	}
 	// Add a couple of bad entries for negative testing
 	s := rand.Float64() * 10
 	gu, _ := NewIECUnit(s, MiB)
-	byteu, _ := NewIECUnit(s, Byte)
+	byteu, _ := NewIECUnit(0, Byte)
 	bu := &IECUnit{s, UnitSymbol("FooBar"), 30}
 	bul := testIECUnitAdd{
 		left:     bu,
@@ -384,12 +350,12 @@ func TestIECUnit_Add(t *testing.T) {
 
 func ExampleIECUnit_Subtract() {
 	var (
-		c, f, i *IECUnit
-		ok      bool
+		c  *IECUnit
+		ok bool
 	)
 	// Test the same byte symbol
-	a, _ := NewIECUnit(2, MiB)
-	b, _ := NewIECUnit(2, MiB)
+	a, _ := NewIECUnit(65536, MiB)
+	b, _ := NewIECUnit(65, GiB)
 	c, ok = a.Subtract(b).(*IECUnit)
 	if !ok {
 		panic(fmt.Errorf("Unit not *IECUnit: %v", c))
@@ -400,32 +366,100 @@ func ExampleIECUnit_Subtract() {
 		b.size, b.symbol,
 		c.size, c.symbol,
 	)
-	// Test the same bit symbol
-	d, _ := NewIECUnit(2, Mib)
-	e, _ := NewIECUnit(2, Mib)
-	if f, ok = d.Subtract(e).(*IECUnit); !ok {
-		panic(fmt.Errorf("Unit not *IECUnit: %v", f))
-	}
-	fmt.Printf(
-		"%.f %s - %.f %s = %.f %s\n",
-		d.size, d.symbol,
-		e.size, e.symbol,
-		f.size, f.symbol,
-	)
-	// Test mixed bit/byte symbol
-	g, _ := NewIECUnit(2, Mib)
-	h, _ := NewIECUnit(2, MiB)
-	if i, ok = g.Subtract(h).(*IECUnit); !ok {
-		panic(fmt.Errorf("Unit not *IECUnit: %v", i))
-	}
-	fmt.Printf(
-		"%.f %s - %.f %s = %.2f %s\n",
-		g.size, g.symbol,
-		h.size, h.symbol,
-		i.size, i.symbol,
-	)
 	// Output:
-	// 2 MiB - 2 MiB = 0 Bit
-	// 2 Mib - 2 Mib = 0 Bit
-	// 2 Mib - 2 MiB = 1.75 MiB
+	// 65536 MiB - 65 GiB = -1 GiB
+}
+
+type testIECUnitSubtract struct {
+	left, right, expected *IECUnit
+}
+
+func TestIECUnit_Subtract(t *testing.T) {
+	rand.Seed(time.Now().UnixNano())
+	tests := make([]testIECUnitSubtract, 0, len(iecUnitExponentMap))
+	// Setup test cases based out of what is in IECUnitExponentMap
+	for k := range iecUnitExponentMap {
+		tul, _ := NewIECUnit(rand.Float64()*10, k)
+		if tul == nil {
+			break
+		}
+		for l := range iecUnitExponentMap {
+			var (
+				ru               *IECUnit
+				nexp             int
+				nsym, lsym, gsym UnitSymbol
+				total            float64
+				neg              bool
+			)
+			ru, _ = NewIECUnit(rand.Float64()*10, l)
+			u := testIECUnitSubtract{left: tul, right: ru}
+			lok, rok := ValidateSymbols(tul.Symbol(), ru.Symbol())
+			if !lok && !rok {
+				nexp = 0
+			}
+			if lok && !rok {
+				nexp = tul.Exponent()
+			}
+			if rok && !lok {
+				nexp = ru.Exponent()
+			}
+			left := tul.ByteSize()
+			right := ru.ByteSize()
+			if left >= right {
+				total = left - right
+			} else {
+				total = right - left
+				if total < float64(0) {
+					neg = true
+				}
+			}
+			if total > 0 {
+				nexp = int(math.Round(math.Log2(total) / 10))
+			}
+			lsym, _ = FindLeastUnitSymbol(IEC, nexp)
+			gsym, _ = FindGreatestUnitSymbol(IEC, nexp)
+			smlSize := BytesToUnitSymbolSize(IEC, lsym, total)
+			lrgSize := BytesToUnitSymbolSize(IEC, gsym, total)
+			if lrgSize > 0 {
+				if neg {
+					lrgSize = -lrgSize
+				}
+				u.expected, _ = NewIECUnit(lrgSize, gsym)
+			} else {
+				if neg {
+					smlSize = -smlSize
+				}
+				u.expected, _ = NewIECUnit(smlSize, nsym)
+			}
+
+			tests = append(tests, u)
+		}
+	}
+	// Add a couple of bad entries for negative testing
+	s := rand.Float64() * 10
+	gu, _ := NewIECUnit(s, MiB)
+	byteu, _ := NewIECUnit(0, Byte)
+	bu := &IECUnit{s, UnitSymbol("FooBar"), 30}
+	bul := testIECUnitSubtract{
+		left:     bu,
+		right:    gu,
+		expected: gu,
+	}
+	bur := testIECUnitSubtract{
+		left:     gu,
+		right:    bu,
+		expected: gu,
+	}
+	bub := testIECUnitSubtract{
+		left:     bu,
+		right:    bu,
+		expected: byteu,
+	}
+	tests = append(tests, bul, bur, bub)
+	// Run through all the tests
+	for _, tst := range tests {
+		u, ok := tst.left.Subtract(tst.right).(*IECUnit)
+		assert.Equal(t, true, ok)
+		assert.Equal(t, tst.expected, u)
+	}
 }

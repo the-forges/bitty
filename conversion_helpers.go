@@ -28,6 +28,8 @@ func NewUnit(std UnitStandard, size float64, sym UnitSymbol) (Unit, error) {
 	switch std {
 	case IEC:
 		return NewIECUnit(size, sym)
+	case SI:
+		return NewSIUnit(size, sym)
 	default:
 		return nil, fmt.Errorf("%s is currently not a supported standard", string(std))
 	}
@@ -90,10 +92,9 @@ func FindExponentBySymbol(sym UnitSymbol) (int, bool) {
 // FindGreatestUnitSymbol finds the greatest of two unit symbols for a given
 // exponent by standard
 func FindGreatestUnitSymbol(std UnitStandard, exp int) (UnitSymbol, bool) {
-	var sym UnitSymbol
 	pair, ok := FindUnitSymbolPairByExponent(std, exp)
 	if !ok {
-		return sym, false
+		return Byte, false
 	}
 	return pair.Greatest(), true
 }
@@ -102,22 +103,28 @@ func FindGreatestUnitSymbol(std UnitStandard, exp int) (UnitSymbol, bool) {
 // exponent by standard
 func FindLeastUnitSymbol(std UnitStandard, exp int) (UnitSymbol, bool) {
 	pair, ok := FindUnitSymbolPairByExponent(std, exp)
-	return pair.Least(), ok
+	if !ok {
+		return Byte, false
+	}
+	return pair.Least(), true
 }
 
 // UnitSymbolToByteSize converts the size from one unit into bytes
 func UnitSymbolToByteSize(std UnitStandard, sym UnitSymbol, size float64) float64 {
-	var exp, bytes float64
+	var exp, bytes, errVal float64
 	pair, ok := FindUnitSymbolPairBySymbol(std, sym)
 	if !ok {
-		return float64(0)
+		return errVal
 	}
-	if std == IEC {
+	switch std {
+	case IEC:
 		exp = float64(pair.Exponent() * 10)
 		bytes = float64(math.Exp2(exp) * size)
-	} else {
+	case SI:
 		exp = float64(pair.Exponent())
 		bytes = float64(math.Pow10(int(exp)) * size)
+	default:
+		return errVal
 	}
 	switch sym {
 	case Bit:
@@ -128,8 +135,12 @@ func UnitSymbolToByteSize(std UnitStandard, sym UnitSymbol, size float64) float6
 		return float64(bytes * 0.125)
 	case KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB:
 		return float64(bytes)
+	case db, hb, kb, Mb, Gb, Tb, Pb, Eb, Zb, Yb:
+		return float64(bytes * 0.125)
+	case dB, hB, kB, MB, GB, TB, PB, EB, ZB, YB:
+		return float64(bytes)
 	default:
-		return float64(0)
+		return errVal
 	}
 }
 
@@ -178,4 +189,18 @@ func Parse(s string) (Unit, error) {
 		return NewUnit(standard, float64(size), symbol)
 	}
 	return nil, parseerr
+}
+
+// ValidateSymbol checks that a symbol is valid
+func ValidateSymbol(sym UnitSymbol) bool {
+	str := fmt.Sprintf("%d %s", 0, sym)
+	if _, err := Parse(str); err != nil {
+		return false
+	}
+	return true
+}
+
+// ValidateSymbols validates all symbols, returning a tuple of booleans
+func ValidateSymbols(l, r UnitSymbol) (bool, bool) {
+	return ValidateSymbol(l), ValidateSymbol(r)
 }
