@@ -191,16 +191,32 @@ func Parse(s string) (Unit, error) {
 	return nil, parseerr
 }
 
-// ValidateSymbol checks that a symbol is valid
-func ValidateSymbol(sym UnitSymbol) bool {
-	str := fmt.Sprintf("%d %s", 0, sym)
-	if _, err := Parse(str); err != nil {
-		return false
+// ConvertUnitStd takes a unit from one standard and converts it to another
+func ConvertUnitStd(u Unit, std UnitStandard) (Unit, error) {
+	var (
+		sym   UnitSymbol
+		bytes = u.ByteSize()
+		size  float64
+		exp   int
+		ok    bool
+		err   error
+	)
+	switch std {
+	case IEC:
+		exp = int(math.Round(math.Log2(total) / 10))
+		size = bytes / math.Pow(2, float64(exp))
+		if size < 1 {
+			if sym, ok = FindLeastUnitSymbol(); !ok {
+				return nil, fmt.Errorf(ErrUnitExponentNotSupportedf, exp)
+			}
+		} else {
+			if sym, ok = FindGreatestUnitSymbol(); !ok {
+				return nil, fmt.Errorf(ErrUnitExponentNotSupportedf, exp)
+			}
+		}
+	case SI:
+	default:
+		return nil, NewErrUnitSymbolNotSupported(std)
 	}
-	return true
-}
-
-// ValidateSymbols validates all symbols, returning a tuple of booleans
-func ValidateSymbols(l, r UnitSymbol) (bool, bool) {
-	return ValidateSymbol(l), ValidateSymbol(r)
+	return NewUnit(std, size, sym)
 }
