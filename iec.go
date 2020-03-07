@@ -17,7 +17,6 @@ package bitty
 */
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -216,11 +215,9 @@ func (u *IECUnit) Subtract(unit Unit) Unit {
 	right := unit.ByteSize()
 	if left >= right {
 		total = left - right
-		fmt.Printf("should be positive: %.2f - %.2f = %.2f\n", left, right, total)
 	} else {
 		total = right - left
 		neg = true
-		fmt.Printf("should be negative: %.2f - %.2f = %.2f\n", right, left, total)
 	}
 	if total > 0 {
 		nexp = int(math.Round(math.Log2(total) / 10))

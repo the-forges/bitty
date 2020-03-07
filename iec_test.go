@@ -409,9 +409,7 @@ func TestIECUnit_Subtract(t *testing.T) {
 				total = left - right
 			} else {
 				total = right - left
-				if total < float64(0) {
-					neg = true
-				}
+				neg = true
 			}
 			if total > 0 {
 				nexp = int(math.Round(math.Log2(total) / 10))
