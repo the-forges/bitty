@@ -121,46 +121,49 @@ func (u *SIUnit) SizeInUnit(symbol UnitSymbol) float64 {
 // Add attempts to add one Unit to another
 func (u *SIUnit) Add(unit Unit) Unit {
 	var (
-		ru   *SIUnit
-		exp  int
-		nsym UnitSymbol
-		size float64
+		nexp     int
+		nsym     UnitSymbol
+		size     float64
+		lok, rok bool
 	)
 	// Validate both sides for valid symbols
-	_, upok := FindUnitSymbolPairBySymbol(SI, u.Symbol())
-	_, rpok := FindUnitSymbolPairBySymbol(SI, unit.Symbol())
-	if !upok && !rpok {
-		n, _ := NewSIUnit(u.Size(), Byte)
-		return n
+	lok, rok = ValidateSymbols(u.Symbol(), unit.Symbol())
+	if !lok && !rok {
+		nu, _ := NewSIUnit(0, Byte)
+		return nu
 	}
-	if upok && !rpok {
+	if lok && !rok {
 		return u
 	}
-	if !upok && rpok {
+	if rok && !lok {
 		return unit
 	}
-	ru = unit.(*SIUnit)
 	// Lets get adding
 	left := u.ByteSize()
-	right := ru.ByteSize()
+	right := unit.ByteSize()
 	total := left + right
-	nexp := int(math.Round(math.Log2(total) / 10))
-	if nexp > u.Exponent() && nexp > ru.Exponent() {
-		exp = nexp
-	} else {
-		if u.Exponent() >= ru.Exponent() {
-			exp = u.Exponent()
-		} else {
-			exp = ru.Exponent()
-		}
+	if total > 0 {
+		nexp = int(math.Round(math.Log2(total) / 10))
 	}
-	nsym, _ = FindGreatestUnitSymbol(SI, exp)
-	lsym, _ := FindLeastUnitSymbol(SI, exp)
-	size = BytesToUnitSymbolSize(SI, nsym, total)
-	lsize := BytesToUnitSymbolSize(SI, lsym, total)
-	if size < 1 {
+	if u.Exponent() >= unit.Exponent() {
+		nexp = u.Exponent()
+	} else {
+		nexp = unit.Exponent()
+	}
+	lsym, ok := FindLeastUnitSymbol(SI, nexp)
+	gsym, ok := FindGreatestUnitSymbol(SI, nexp)
+	if !ok {
+		nu, _ := NewSIUnit(0, Byte)
+		return nu
+	}
+	smallSize := BytesToUnitSymbolSize(SI, lsym, total)
+	lrgSize := BytesToUnitSymbolSize(SI, gsym, total)
+	if lrgSize < 1 {
 		nsym = lsym
-		size = lsize
+		size = smallSize
+	} else {
+		nsym = gsym
+		size = lrgSize
 	}
 	nu, _ := NewSIUnit(size, nsym)
 	return nu
@@ -169,48 +172,54 @@ func (u *SIUnit) Add(unit Unit) Unit {
 // Subtract attempts to subtract one Unit from another
 func (u *SIUnit) Subtract(unit Unit) Unit {
 	var (
-		ru         *SIUnit
-		ok         bool
-		total      float64
-		nexp       int
-		lsym, gsym UnitSymbol
+		ok, lok, rok, neg bool
+		total             float64
+		nexp              int
+		lsym, gsym        UnitSymbol
 	)
-	if ru, ok = unit.(*SIUnit); !ok {
+	lok, rok = ValidateSymbols(u.Symbol(), unit.Symbol())
+	if !lok && !rok {
+		nu, _ := NewSIUnit(0, Byte)
+		return nu
+	}
+	if lok && !rok {
 		return u
 	}
+	if rok && !lok {
+		return unit
+	}
 	left := u.ByteSize()
-	right := ru.ByteSize()
-	if left > right {
+	right := unit.ByteSize()
+	if left >= right {
 		total = left - right
 	} else {
 		total = right - left
+		neg = true
 	}
 	if total > 0 {
-		nexp = int(math.Round(math.Log2(total) / 10))
-	} else {
-		nexp = 0
+		l := math.Log10(total)
+		nexp = int(math.Floor(l))
 	}
-	if u.Symbol() != ru.Symbol() || nexp != u.Exponent() {
-		lsym, ok = FindLeastUnitSymbol(SI, nexp)
-		if !ok {
-			return u
-		}
-		gsym, ok = FindGreatestUnitSymbol(SI, nexp)
-		if !ok {
-			return u
-		}
-	} else {
-		lsym, gsym = u.Symbol(), u.Symbol()
+	lsym, ok = FindLeastUnitSymbol(SI, nexp)
+	gsym, ok = FindGreatestUnitSymbol(SI, nexp)
+	if !ok {
+		nu, _ := NewSIUnit(0, Byte)
+		return nu
 	}
 	smlSize := BytesToUnitSymbolSize(SI, lsym, total)
 	lrgSize := BytesToUnitSymbolSize(SI, gsym, total)
-
-	if lrgSize > 0 {
+	if lrgSize >= 0 {
+		if neg {
+			lrgSize = -lrgSize
+		}
 		nu, err := NewSIUnit(lrgSize, gsym)
 		if err != nil {
 			return u
 		}
 		return nu
+	}
+	if neg {
+		smlSize = -smlSize
 	}
 	nu, err := NewSIUnit(smlSize, lsym)
 	if err != nil {

@@ -151,21 +151,26 @@ func BytesToUnitSymbolSize(std UnitStandard, sym UnitSymbol, size float64) float
 	if !ok {
 		return float64(0)
 	}
-	if std == IEC {
-		exp = float64(pair.Exponent() * 10)
-	} else {
-		exp = float64(pair.Exponent())
+	switch std {
+	case IEC:
+		exp = math.Pow(2, float64(pair.Exponent()*10))
+	case SI:
+		exp = math.Pow10(int(pair.Exponent()))
 	}
 	switch sym {
 	case Bit:
 		return float64(size * 8)
+	case Byte:
+		return size / exp
+	case db, hb, kb, Mb, Gb, Tb, Pb, Eb, Zb, Yb,
+		dB, hB, kB, MB, GB, TB, PB, EB, ZB, YB:
+		return size / exp
 	case Kib, Mib, Gib, Tib, Pib, Eib, Zib, Yib:
 		return (size / (size * 0.125)) / 2
-	case Byte, KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB:
-		return size / math.Pow(2, float64(exp))
-	default:
-		return float64(0)
+	case KiB, MiB, GiB, TiB, PiB, EiB, ZiB, YiB:
+		return size / exp
 	}
+	return float64(0)
 }
 
 // Parse parses a string representation of a unit size in the format of
@@ -194,29 +199,29 @@ func Parse(s string) (Unit, error) {
 // ConvertUnitStd takes a unit from one standard and converts it to another
 func ConvertUnitStd(u Unit, std UnitStandard) (Unit, error) {
 	var (
-		sym   UnitSymbol
-		bytes = u.ByteSize()
-		size  float64
-		exp   int
-		ok    bool
-		err   error
+		sym       UnitSymbol
+		bytes     = u.ByteSize()
+		size, exp float64
+		ok        bool
 	)
 	switch std {
 	case IEC:
-		exp = int(math.Round(math.Log2(total) / 10))
-		size = bytes / math.Pow(2, float64(exp))
-		if size < 1 {
-			if sym, ok = FindLeastUnitSymbol(); !ok {
-				return nil, fmt.Errorf(ErrUnitExponentNotSupportedf, exp)
-			}
-		} else {
-			if sym, ok = FindGreatestUnitSymbol(); !ok {
-				return nil, fmt.Errorf(ErrUnitExponentNotSupportedf, exp)
-			}
-		}
+		exp = math.Round(math.Log2(bytes) / 10)
+		size = bytes / math.Pow(2, exp)
 	case SI:
+		exp = math.Floor(math.Log10(bytes))
+		size = bytes / math.Pow10(int(exp))
 	default:
-		return nil, NewErrUnitSymbolNotSupported(std)
+		return nil, NewErrUnitStandardNotSupported(std)
+	}
+	if size < 1 {
+		if sym, ok = FindLeastUnitSymbol(std, int(exp)); !ok {
+			return nil, fmt.Errorf(ErrUnitExponentNotSupportedf, exp)
+		}
+	} else {
+		if sym, ok = FindGreatestUnitSymbol(std, int(exp)); !ok {
+			return nil, fmt.Errorf(ErrUnitExponentNotSupportedf, exp)
+		}
 	}
 	return NewUnit(std, size, sym)
 }

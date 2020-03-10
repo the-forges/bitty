@@ -24,11 +24,17 @@ var (
 	ErrUnitSymbolEmptyNotSupportedf = errors.Errorf(ErrUnitSymbolNotSupported.Error() + ": empty symbol")
 	ErrUnitExponentNotSupported     = errors.New("unit exponent not supported")
 	ErrUnitExponentNotSupportedf    = string(ErrUnitExponentNotSupported.Error() + ": %s")
+	ErrUnitStandardNotSupported     = errors.New("unit standard not supported")
+	ErrUnitStandardNotSupportedf    = string(ErrUnitStandardNotSupported.Error() + ": %s")
 )
 
 func NewErrUnitSymbolNotSupported(s UnitSymbol) error {
 	if s == "" {
 		return ErrUnitSymbolEmptyNotSupportedf
 	}
+	return errors.Errorf(ErrUnitSymbolNotSupportedf, s)
+}
+
+func NewErrUnitStandardNotSupported(s UnitStandard) error {
 	return errors.Errorf(ErrUnitSymbolNotSupportedf, s)
 }
