@@ -68,3 +68,35 @@ func TestNewUnit(t *testing.T) {
 		assert.Equal(t, u.expected, nu)
 	}
 }
+
+type parseExampleData struct {
+	input    string
+	expected Unit
+	err      error
+}
+
+func TestParse(t *testing.T) {
+	a, _ := NewIECUnit(1, MiB)
+	b, _ := NewSIUnit(1, MB)
+	c, _ := NewIECUnit(1.64, Kib)
+	d, _ := NewSIUnit(-1, Mb)
+	e, _ := NewSIUnit(1, MB)
+	erra := NewErrUnitCouldNotBeParsed("one MiB")
+	errb := NewErrUnitStandardNotSupported(UnitStandard(2))
+	tt := []parseExampleData{
+		parseExampleData{"1 MiB", a, nil},
+		parseExampleData{"1 MB", b, nil},
+		parseExampleData{"1.64 Kib", c, nil},
+		parseExampleData{"-1 Mb", d, nil},
+		parseExampleData{"1MB", e, nil},
+		parseExampleData{"one MiB", nil, erra},
+		parseExampleData{"1 Bab", nil, errb},
+	}
+	for _, d := range tt {
+		u, err := Parse(d.input)
+		if err != nil || d.err != nil {
+			assert.Error(t, d.err, err)
+		}
+		assert.Equal(t, d.expected, u)
+	}
+}

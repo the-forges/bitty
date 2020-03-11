@@ -26,6 +26,8 @@ var (
 	ErrUnitExponentNotSupportedf    = string(ErrUnitExponentNotSupported.Error() + ": %s")
 	ErrUnitStandardNotSupported     = errors.New("unit standard not supported")
 	ErrUnitStandardNotSupportedf    = string(ErrUnitStandardNotSupported.Error() + ": %s")
+	ErrUnitCouldNotBeParsed         = errors.New("unit could not be parsed")
+	ErrUnitCouldNotBeParsedf        = string(ErrUnitCouldNotBeParsed.Error() + ": %s")
 )
 
 func NewErrUnitSymbolNotSupported(s UnitSymbol) error {
@@ -37,4 +39,8 @@ func NewErrUnitSymbolNotSupported(s UnitSymbol) error {
 
 func NewErrUnitStandardNotSupported(s UnitStandard) error {
 	return errors.Errorf(ErrUnitSymbolNotSupportedf, s)
+}
+
+func NewErrUnitCouldNotBeParsed(s string) error {
+	return errors.Errorf(ErrUnitCouldNotBeParsedf, s)
 }

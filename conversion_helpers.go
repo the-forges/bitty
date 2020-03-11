@@ -177,12 +177,15 @@ func BytesToUnitSymbolSize(std UnitStandard, sym UnitSymbol, size float64) float
 // "<size><unit symbol>" or "<size> <unit symbol>" in order to instantiate and
 // return a Unit with the correct standard, exponent, size, and symbol
 func Parse(s string) (Unit, error) {
-	stderr := fmt.Errorf("%s could not be found in the standard", s)
-	parseerr := fmt.Errorf("%s could not be parsed", s)
-	r := regexp.MustCompile(`^(\d+)\s{0,}(\w+)$`)
+	stderr := ErrUnitStandardNotSupported
+	parseerr := NewErrUnitCouldNotBeParsed(s)
+	r := regexp.MustCompile(`^([-\d\.]+)\s{0,}(\w+)$`)
 	if r.MatchString(s) {
 		m := r.FindStringSubmatch(s)
-		size, err := strconv.Atoi(m[1])
+		if len(m) < 1 {
+			return nil, parseerr
+		}
+		size, err := strconv.ParseFloat(m[1], 64)
 		if err != nil {
 			return nil, parseerr
 		}
