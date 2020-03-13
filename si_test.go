@@ -204,19 +204,19 @@ func ExampleSIUnit_Subtract() {
 	)
 	// Test the same byte symbol
 	a, _ := NewSIUnit(10, MB)
-	b, _ := NewSIUnit(1, MB)
+	b, _ := NewSIUnit(10.023, MB)
 	c, ok = a.Subtract(b).(*SIUnit)
 	if !ok {
 		panic(fmt.Errorf("Unit not *SIUnit: %v", c))
 	}
 	fmt.Printf(
-		"%.f %s - %.f %s = %.f %s\n",
+		"%.3f %s - %.3f %s = %.3f %s\n",
 		a.size, a.symbol,
 		b.size, b.symbol,
 		c.size, c.symbol,
 	)
 	// Output:
-	// 10 MB - 1 MB = 9 MB
+	// 10.000 MB - 10.023 MB = -23.000 kB
 }
 
 type testSIUnitSubtract struct {

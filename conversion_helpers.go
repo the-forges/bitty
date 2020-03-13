@@ -90,21 +90,35 @@ func FindExponentBySymbol(sym UnitSymbol) (int, bool) {
 }
 
 // FindGreatestUnitSymbol finds the greatest of two unit symbols for a given
-// exponent by standard
+// exponent by standard.
+//
+// Currently, if no symbol pair is found, we attempt to recursively find the
+// floor exponent in which one is found, or return Byte. This is mostly to
+// support base 10 decimal values where the exponents do not flow smoothly
+// from 1-8 (like base 2 does).
 func FindGreatestUnitSymbol(std UnitStandard, exp int) (UnitSymbol, bool) {
 	pair, ok := FindUnitSymbolPairByExponent(std, exp)
-	if !ok {
+	if !ok && exp <= 0 {
 		return Byte, false
+	} else if !ok {
+		return FindGreatestUnitSymbol(std, exp-1)
 	}
 	return pair.Greatest(), true
 }
 
 // FindLeastUnitSymbol finds the least of two unit symbols for a given
-// exponent by standard
+// exponent by standard.
+//
+// Currently, if no symbol pair is found, we attempt to recursively find the
+// floor exponent in which one is found, or return Bit. This is mostly to
+// support base 10 decimal values where the exponents do not flow smoothly
+// from 1-8 (like base 2 does).
 func FindLeastUnitSymbol(std UnitStandard, exp int) (UnitSymbol, bool) {
 	pair, ok := FindUnitSymbolPairByExponent(std, exp)
-	if !ok {
-		return Byte, false
+	if !ok && exp <= 0 {
+		return Bit, false
+	} else if !ok {
+		return FindLeastUnitSymbol(std, exp-1)
 	}
 	return pair.Least(), true
 }

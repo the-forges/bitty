@@ -354,20 +354,20 @@ func ExampleIECUnit_Subtract() {
 		ok bool
 	)
 	// Test the same byte symbol
-	a, _ := NewIECUnit(65536, MiB)
-	b, _ := NewIECUnit(65, GiB)
+	a, _ := NewIECUnit(10, GiB)
+	b, _ := NewIECUnit(10.023, GiB)
 	c, ok = a.Subtract(b).(*IECUnit)
 	if !ok {
 		panic(fmt.Errorf("Unit not *IECUnit: %v", c))
 	}
 	fmt.Printf(
-		"%.f %s - %.f %s = %.f %s\n",
+		"%.3f %s - %.3f %s = %.3f %s\n",
 		a.size, a.symbol,
 		b.size, b.symbol,
 		c.size, c.symbol,
 	)
 	// Output:
-	// 65536 MiB - 65 GiB = -1 GiB
+	// 10.000 GiB - 10.023 GiB = -23.552 MiB
 }
 
 type testIECUnitSubtract struct {
