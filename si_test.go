@@ -93,10 +93,7 @@ func ExampleSIUnit_Add() {
 	// Test the same byte symbol
 	a, _ := NewSIUnit(2, MB)
 	b, _ := NewSIUnit(2, MB)
-	c, ok := a.Add(b).(*SIUnit)
-	if !ok {
-		panic(fmt.Errorf("Unit not *SIUnit: %v", c))
-	}
+	c, _ := a.Add(b)
 	fmt.Printf(
 		"%.f %s + %.f %s = %.f %s\n",
 		a.Size(), a.Symbol(),
@@ -191,8 +188,7 @@ func TestSIUnit_Add(t *testing.T) {
 	tests = append(tests, bul, bur, bub)
 	// Run through all the tests
 	for _, tst := range tests {
-		u, ok := tst.left.Add(tst.right).(*SIUnit)
-		assert.Equal(t, true, ok)
+		u, _ := tst.left.Add(tst.right)
 		assert.Equal(t, tst.expected, u)
 	}
 }

@@ -243,10 +243,7 @@ func ExampleIECUnit_Add() {
 	// Test the same byte symbol
 	a, _ := NewIECUnit(2, MiB)
 	b, _ := NewIECUnit(2, MiB)
-	c, ok := a.Add(b).(*IECUnit)
-	if !ok {
-		panic(fmt.Errorf("Unit not *IECUnit: %v", c))
-	}
+	c, _ := a.Add(b)
 	fmt.Printf(
 		"%.f %s + %.f %s = %.f %s\n",
 		a.Size(), a.Symbol(),
@@ -342,8 +339,7 @@ func TestIECUnit_Add(t *testing.T) {
 	tests = append(tests, bul, bur, bub)
 	// Run through all the tests
 	for _, tst := range tests {
-		u, ok := tst.left.Add(tst.right).(*IECUnit)
-		assert.Equal(t, true, ok)
+		u, _ := tst.left.Add(tst.right)
 		assert.Equal(t, tst.expected, u)
 	}
 }

@@ -119,54 +119,8 @@ func (u *SIUnit) SizeInUnit(symbol UnitSymbol) float64 {
 }
 
 // Add attempts to add one Unit to another
-func (u *SIUnit) Add(unit Unit) Unit {
-	var (
-		nexp     int
-		nsym     UnitSymbol
-		size     float64
-		lok, rok bool
-	)
-	// Validate both sides for valid symbols
-	lok, rok = ValidateSymbols(u.Symbol(), unit.Symbol())
-	if !lok && !rok {
-		nu, _ := NewSIUnit(0, Byte)
-		return nu
-	}
-	if lok && !rok {
-		return u
-	}
-	if rok && !lok {
-		return unit
-	}
-	// Lets get adding
-	left := u.ByteSize()
-	right := unit.ByteSize()
-	total := left + right
-	if total > 0 {
-		nexp = int(math.Round(math.Log2(total) / 10))
-	}
-	if u.Exponent() >= unit.Exponent() {
-		nexp = u.Exponent()
-	} else {
-		nexp = unit.Exponent()
-	}
-	lsym, ok := FindLeastUnitSymbol(SI, nexp)
-	gsym, ok := FindGreatestUnitSymbol(SI, nexp)
-	if !ok {
-		nu, _ := NewSIUnit(0, Byte)
-		return nu
-	}
-	smallSize := BytesToUnitSymbolSize(SI, lsym, total)
-	lrgSize := BytesToUnitSymbolSize(SI, gsym, total)
-	if lrgSize < 1 {
-		nsym = lsym
-		size = smallSize
-	} else {
-		nsym = gsym
-		size = lrgSize
-	}
-	nu, _ := NewSIUnit(size, nsym)
-	return nu
+func (u *SIUnit) Add(unit Unit) (Unit, error) {
+	return AddUnits(u, unit)
 }
 
 // Subtract attempts to subtract one Unit from another

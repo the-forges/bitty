@@ -51,7 +51,7 @@ type Sizer interface {
 // by the SI and IEC
 type Calculator interface {
 	// Add attempts to add one Unit to another
-	Add(Unit) Unit
+	Add(Unit) (Unit, error)
 	// Subtract attempts to subtract one Unit from another
 	Subtract(Unit) Unit
 	// Multiply attempts to multiply one Unit by another
