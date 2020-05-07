@@ -1,4 +1,4 @@
-module github.com/m3talsmith/bitty
+module github.com/the-forges/bitty
 
 go 1.14
 
