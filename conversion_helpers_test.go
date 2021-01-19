@@ -59,7 +59,7 @@ func TestNewUnit(t *testing.T) {
 			1,
 			MB,
 			nil,
-			fmt.Errorf("%s is currently not a supported standard", string(50)),
+			fmt.Errorf("%v is currently not a supported standard", 50),
 		},
 	}
 	for _, u := range tt {

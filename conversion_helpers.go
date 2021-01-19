@@ -31,7 +31,7 @@ func NewUnit(std UnitStandard, size float64, sym UnitSymbol) (Unit, error) {
 	case SI:
 		return NewSIUnit(size, sym)
 	default:
-		return nil, fmt.Errorf("%s is currently not a supported standard", string(std))
+		return nil, fmt.Errorf("%v is currently not a supported standard", std)
 	}
 }
 
