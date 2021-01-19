@@ -11,8 +11,8 @@ go:
 
 env:
   global:
-    - GO111MODULE: on
-    - CODECOV_TOKEN: aa7d9225-18d4-412f-afbe-5b6dd20bed13
+    GO111MODULE: on
+    CODECOV_TOKEN: aa7d9225-18d4-412f-afbe-5b6dd20bed13
 
 before_install:
   - go get -t -v ./...
