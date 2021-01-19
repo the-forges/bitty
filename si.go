@@ -18,29 +18,34 @@ import "math"
 	limitations under the License.
 */
 
-// IECUnitSymbolPair represents a binary unit symbol pair as defined by the 9th
+// SIUnitSymbolPair represents a base 10 decimal unit symbol pair as defined by the 9th
 // edition SI standard
 type SIUnitSymbolPair struct {
 	least, greatest UnitSymbol
 	exponent        int
 }
 
+// NewSIUnitSymbolPair takes a UnitStandard and returns a new UnitSymbolPair
 func NewSIUnitSymbolPair(l, r UnitSymbol, e int) UnitSymbolPair {
 	return &SIUnitSymbolPair{least: l, greatest: r, exponent: e}
 }
 
+// Standard returns the UnitStandard of a SIUnitSymbolPair: SI
 func (pair *SIUnitSymbolPair) Standard() UnitStandard {
 	return SI
 }
 
+// Exponent returns the exponent of a SIUnitSymbolPair
 func (pair *SIUnitSymbolPair) Exponent() int {
 	return pair.exponent
 }
 
+// Least returns the least UnitSymbol of a SIUnitSymbolPair
 func (pair *SIUnitSymbolPair) Least() UnitSymbol {
 	return pair.least
 }
 
+// Greatest returns the greatest UnitSymbol of a SIUnitSymbolPair
 func (pair *SIUnitSymbolPair) Greatest() UnitSymbol {
 	return pair.greatest
 }
@@ -63,18 +68,22 @@ func NewSIUnit(size float64, sym UnitSymbol) (*SIUnit, error) {
 	return nil, NewErrUnitSymbolNotSupported(sym)
 }
 
+// Standard returns the UnitStandard of a SIUnit: SI
 func (u *SIUnit) Standard() UnitStandard {
 	return SI
 }
 
+// Exponent returns the exponent of a SIUnit
 func (u *SIUnit) Exponent() int {
 	return u.exponent
 }
 
+// Symbol returns the UnitSymbol of a SIUnit
 func (u *SIUnit) Symbol() UnitSymbol {
 	return u.symbol
 }
 
+// Size returns the size of an SIUnit
 func (u *SIUnit) Size() float64 {
 	return u.size
 }

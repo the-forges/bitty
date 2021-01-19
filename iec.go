@@ -41,29 +41,34 @@ var iecUnitExponentMap = map[UnitSymbol]int{
 	YiB:  8,
 }
 
-// IECUnitSymbolPair represents a binary unit symbol pair as defined by the 9th
+// IECUnitSymbolPair represents a base 2 binary unit symbol pair as defined by the 9th
 // edition SI standard
 type IECUnitSymbolPair struct {
 	least, greatest UnitSymbol
 	exponent        int
 }
 
+// NewIECUnitSymbolPair takes a UnitStandard and returns a new UnitSymbolPair
 func NewIECUnitSymbolPair(l, r UnitSymbol, e int) UnitSymbolPair {
 	return &IECUnitSymbolPair{least: l, greatest: r, exponent: e}
 }
 
+// Standard returns the UnitStandard of a IECUnitSymbolPair: IEC
 func (pair *IECUnitSymbolPair) Standard() UnitStandard {
 	return IEC
 }
 
+// Exponent returns the exponent of a IECUnitSymbolPair
 func (pair *IECUnitSymbolPair) Exponent() int {
 	return pair.exponent
 }
 
+// Least returns the least UnitSymbol of a IECUnitSymbolPair
 func (pair *IECUnitSymbolPair) Least() UnitSymbol {
 	return pair.least
 }
 
+// Greatest returns the greatest UnitSymbol of a IECUnitSymbolPair
 func (pair *IECUnitSymbolPair) Greatest() UnitSymbol {
 	return pair.greatest
 }
@@ -86,18 +91,22 @@ func NewIECUnit(size float64, sym UnitSymbol) (*IECUnit, error) {
 	return nil, NewErrUnitSymbolNotSupported(sym)
 }
 
+// Standard returns the UnitStandard of a IECUnit: IEC
 func (u *IECUnit) Standard() UnitStandard {
 	return IEC
 }
 
+// Exponent returns the exponent of a IECUnit
 func (u *IECUnit) Exponent() int {
 	return u.exponent
 }
 
+// Symbol returns the UnitSymbol of a IECUnit
 func (u *IECUnit) Symbol() UnitSymbol {
 	return u.symbol
 }
 
+// Size returns the size of an IECUnit
 func (u *IECUnit) Size() float64 {
 	return u.size
 }

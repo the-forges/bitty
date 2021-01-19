@@ -18,6 +18,7 @@ package bitty
 
 import "github.com/pkg/errors"
 
+// Error messages for Units
 var (
 	ErrUnitSymbolNotSupported       = errors.New("unit symbol not supported")
 	ErrUnitSymbolNotSupportedf      = string(ErrUnitSymbolNotSupported.Error() + ": %s")
@@ -30,6 +31,7 @@ var (
 	ErrUnitCouldNotBeParsedf        = string(ErrUnitCouldNotBeParsed.Error() + ": %s")
 )
 
+// NewErrUnitSymbolNotSupported returns an error formatted for a given UnitSymbol
 func NewErrUnitSymbolNotSupported(s UnitSymbol) error {
 	if s == "" {
 		return ErrUnitSymbolEmptyNotSupportedf
@@ -37,10 +39,12 @@ func NewErrUnitSymbolNotSupported(s UnitSymbol) error {
 	return errors.Errorf(ErrUnitSymbolNotSupportedf, s)
 }
 
+// NewErrUnitStandardNotSupported returns an error formatted for a given UnitStandard
 func NewErrUnitStandardNotSupported(s UnitStandard) error {
 	return errors.Errorf(ErrUnitSymbolNotSupportedf, s)
 }
 
+// NewErrUnitCouldNotBeParsed returns an error formatted for a given Unit
 func NewErrUnitCouldNotBeParsed(s string) error {
 	return errors.Errorf(ErrUnitCouldNotBeParsedf, s)
 }

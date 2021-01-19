@@ -33,28 +33,28 @@ type testNewUnit struct {
 
 func TestNewUnit(t *testing.T) {
 	tt := []testNewUnit{
-		testNewUnit{
+		{
 			IEC,
 			1,
 			MiB,
 			&IECUnit{1, MiB, 2},
 			nil,
 		},
-		testNewUnit{
+		{
 			IEC,
 			1,
 			GiB,
 			&IECUnit{1, GiB, 3},
 			nil,
 		},
-		testNewUnit{
+		{
 			SI,
 			1,
 			MB,
 			&SIUnit{1, MB, 6},
 			nil,
 		},
-		testNewUnit{
+		{
 			UnitStandard(50),
 			1,
 			MB,
@@ -84,13 +84,13 @@ func TestParse(t *testing.T) {
 	erra := NewErrUnitCouldNotBeParsed("one MiB")
 	errb := NewErrUnitStandardNotSupported(UnitStandard(2))
 	tt := []parseExampleData{
-		parseExampleData{"1 MiB", a, nil},
-		parseExampleData{"1 MB", b, nil},
-		parseExampleData{"1.64 Kib", c, nil},
-		parseExampleData{"-1 Mb", d, nil},
-		parseExampleData{"1MB", e, nil},
-		parseExampleData{"one MiB", nil, erra},
-		parseExampleData{"1 Bab", nil, errb},
+		{"1 MiB", a, nil},
+		{"1 MB", b, nil},
+		{"1.64 Kib", c, nil},
+		{"-1 Mb", d, nil},
+		{"1MB", e, nil},
+		{"one MiB", nil, erra},
+		{"1 Bab", nil, errb},
 	}
 	for _, d := range tt {
 		u, err := Parse(d.input)

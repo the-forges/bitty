@@ -67,26 +67,35 @@ type Unit interface {
 	Calculator
 }
 
-// BaseSymbolPair represents the bit and byte pairs necassary for
+// BaseUnitSymbolPair represents the bit and byte pairs
 type BaseUnitSymbolPair struct {
 	standard *UnitStandard
 }
 
+// NewBaseUnitSymbolPair takes a UnitStandard and returns a new UnitSymbolPair
 func NewBaseUnitSymbolPair(std UnitStandard) UnitSymbolPair {
 	return &BaseUnitSymbolPair{standard: &std}
 }
+
+// Standard returns the UnitStandard of a BaseUnitSymbolPair if it exists or SI
 func (b *BaseUnitSymbolPair) Standard() UnitStandard {
 	if b.standard == nil {
 		return SI
 	}
 	return *b.standard
 }
+
+// Exponent returns the exponent of a BaseUnitSymbolPair: 0
 func (b *BaseUnitSymbolPair) Exponent() int {
 	return 0
 }
+
+// Least returns the least UnitSymbol of a BaseUnitSymbolPair: a Bit
 func (b *BaseUnitSymbolPair) Least() UnitSymbol {
 	return Bit
 }
+
+// Greatest returns the greatest UnitSymbol of a BaseUnitSymbolPair: a Byte
 func (b *BaseUnitSymbolPair) Greatest() UnitSymbol {
 	return Byte
 }
