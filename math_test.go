@@ -7,16 +7,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type mathTableTest struct {
+	l              string
+	r              string
+	expected       string
+	expectedSymbol UnitSymbol
+	formatter      string
+	expectedErr    error
+	msg            string
+}
+
+type mathSadTableTest struct {
+	l   Unit
+	r   Unit
+	msg string
+}
+
 func TestAddUnits(t *testing.T) {
-	tt := []struct {
-		l              string
-		r              string
-		expected       string
-		expectedSymbol UnitSymbol
-		formatter      string
-		expectedErr    error
-		msg            string
-	}{
+	tt := []mathTableTest{
 		{
 			l:              "100 GB",
 			r:              "50 GB",
@@ -70,11 +78,7 @@ func TestAddUnits(t *testing.T) {
 }
 
 func TestAddUnitsSadPath(t *testing.T) {
-	tt := []struct {
-		l   Unit
-		r   Unit
-		msg string
-	}{
+	tt := []mathSadTableTest{
 		{
 			l: &IECUnit{
 				size:   100,
@@ -118,15 +122,7 @@ func TestAddUnitsSadPath(t *testing.T) {
 }
 
 func TestSubtractUnits(t *testing.T) {
-	tt := []struct {
-		l              string
-		r              string
-		expected       string
-		expectedSymbol UnitSymbol
-		formatter      string
-		expectedErr    error
-		msg            string
-	}{
+	tt := []mathTableTest{
 		{
 			l:              "100 GB",
 			r:              "50 GB",
@@ -182,11 +178,7 @@ func TestSubtractUnits(t *testing.T) {
 }
 
 func TestSubtractUnitsSadPath(t *testing.T) {
-	tt := []struct {
-		l   Unit
-		r   Unit
-		msg string
-	}{
+	tt := []mathSadTableTest{
 		{
 			l: &IECUnit{
 				size:   100,
