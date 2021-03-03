@@ -57,16 +57,62 @@ func TestAddUnits(t *testing.T) {
 
 	for _, test := range tt {
 		left, err := Parse(test.l)
-		assert.NoError(t, err)
 
 		right, err := Parse(test.r)
-		assert.NoError(t, err)
 
 		actualUnit, err := AddUnits(left, right)
 		assert.Equal(t, test.expectedErr, err)
 
 		actual := fmt.Sprintf(test.formatter, actualUnit.SizeInUnit(test.expectedSymbol), actualUnit.Symbol())
 		assert.Equal(t, test.expected, actual)
+	}
+
+}
+
+func TestAddUnitsSadPath(t *testing.T) {
+	tt := []struct {
+		l   Unit
+		r   Unit
+		msg string
+	}{
+		{
+			l: &IECUnit{
+				size:   100,
+				symbol: UnitSymbol("giib"),
+			},
+			r: &IECUnit{
+				size:   100,
+				symbol: UnitSymbol("giib"),
+			},
+			msg: "returns an error if both units are invalid",
+		},
+		{
+			l: &IECUnit{
+				size:   100,
+				symbol: GiB,
+			},
+			r: &IECUnit{
+				size:   100,
+				symbol: UnitSymbol("giib"),
+			},
+			msg: "returns an error if r is invalid",
+		},
+		{
+			l: &IECUnit{
+				size:   100,
+				symbol: UnitSymbol("giib"),
+			},
+			r: &IECUnit{
+				size:   100,
+				symbol: GiB,
+			},
+			msg: "returns an error if l is invalid",
+		},
+	}
+
+	for _, test := range tt {
+		_, err := AddUnits(test.l, test.r)
+		assert.Error(t, err, test.msg)
 	}
 
 }
@@ -88,7 +134,7 @@ func TestSubtractUnits(t *testing.T) {
 			expectedSymbol: GB,
 			formatter:      "%0.f %s",
 			expectedErr:    nil,
-			msg:            "can add units of the same standard",
+			msg:            "can subtract units of the same standard",
 		},
 		{
 			l:              "1 GB",
@@ -97,7 +143,7 @@ func TestSubtractUnits(t *testing.T) {
 			expectedSymbol: GB,
 			formatter:      "%f %s",
 			expectedErr:    nil,
-			msg:            "can add units of the different standards",
+			msg:            "can subtract units of the different standards",
 		},
 		{
 			l:              "1 GiB",
@@ -106,7 +152,7 @@ func TestSubtractUnits(t *testing.T) {
 			expectedSymbol: GiB,
 			formatter:      "%f %s",
 			expectedErr:    nil,
-			msg:            "can add units of the different standards, reversed",
+			msg:            "can subtract units of the different standards, reversed",
 		},
 		{
 			l:              "100000 TiB", // 10,000
@@ -115,7 +161,7 @@ func TestSubtractUnits(t *testing.T) {
 			expectedSymbol: TiB,
 			formatter:      "%f %s",
 			expectedErr:    nil,
-			msg:            "can add large numbers",
+			msg:            "can subtract large numbers",
 		},
 	}
 
@@ -131,6 +177,54 @@ func TestSubtractUnits(t *testing.T) {
 
 		actual := fmt.Sprintf(test.formatter, actualUnit.Size(), actualUnit.Symbol())
 		assert.Equal(t, test.expected, actual)
+	}
+
+}
+
+func TestSubtractUnitsSadPath(t *testing.T) {
+	tt := []struct {
+		l   Unit
+		r   Unit
+		msg string
+	}{
+		{
+			l: &IECUnit{
+				size:   100,
+				symbol: UnitSymbol("giib"),
+			},
+			r: &IECUnit{
+				size:   100,
+				symbol: UnitSymbol("giib"),
+			},
+			msg: "returns an error if both units are invalid",
+		},
+		{
+			l: &IECUnit{
+				size:   100,
+				symbol: GiB,
+			},
+			r: &IECUnit{
+				size:   100,
+				symbol: UnitSymbol("giib"),
+			},
+			msg: "returns an error if r is invalid",
+		},
+		{
+			l: &IECUnit{
+				size:   100,
+				symbol: UnitSymbol("giib"),
+			},
+			r: &IECUnit{
+				size:   100,
+				symbol: GiB,
+			},
+			msg: "returns an error if l is invalid",
+		},
+	}
+
+	for _, test := range tt {
+		_, err := SubtractUnits(test.l, test.r)
+		assert.Error(t, err, test.msg)
 	}
 
 }

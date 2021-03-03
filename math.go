@@ -19,10 +19,10 @@ func AddUnits(lu, ru Unit) (Unit, error) {
 		return nil, fmt.Errorf("unable to add units with invalid symbols together: %s + %s", lu.Symbol(), ru.Symbol())
 	}
 	if lok && !rok {
-		return lu, nil
+		return lu, fmt.Errorf("unable to add unit with invalid symbol: %s", ru.Symbol())
 	}
 	if rok && !lok {
-		return ru, nil
+		return ru, fmt.Errorf("unable to add unit with invalid symbol: %s", lu.Symbol())
 	}
 
 	leftByte, rightByte := lu.ByteSize(), ru.ByteSize()
@@ -50,6 +50,8 @@ func AddUnits(lu, ru Unit) (Unit, error) {
 	return u, nil
 }
 
+// SubtractUnits takes two units with valid symbols, subtracts them, then returns a new unit
+// SubtractUnits will always default to the left unit's symbol and exponent
 func SubtractUnits(lu, ru Unit) (Unit, error) {
 	var (
 		newExponent int
@@ -63,10 +65,10 @@ func SubtractUnits(lu, ru Unit) (Unit, error) {
 		return nil, fmt.Errorf("unable to add units with invalid symbols together: %s + %s", lu.Symbol(), ru.Symbol())
 	}
 	if lok && !rok {
-		return lu, nil
+		return lu, fmt.Errorf("unable to subtract unit with invalid symbol: %s", ru.Symbol())
 	}
 	if rok && !lok {
-		return ru, nil
+		return ru, fmt.Errorf("unable to subtract unit with invalid symbol: %s", lu.Symbol())
 	}
 
 	leftByte, rightByte := lu.ByteSize(), ru.ByteSize()
